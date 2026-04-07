@@ -109,6 +109,16 @@ export async function createApp(
       bindHost: opts.bindHost,
     }),
   );
+  // Health endpoint must be accessible without authentication for ALB health checks
+  app.use(
+    "/api/health",
+    healthRoutes(db, {
+      deploymentMode: opts.deploymentMode,
+      deploymentExposure: opts.deploymentExposure,
+      authReady: opts.authReady,
+      companyDeletionEnabled: opts.companyDeletionEnabled,
+    }),
+  );
   app.use(
     actorMiddleware(db, {
       deploymentMode: opts.deploymentMode,
@@ -140,15 +150,6 @@ export async function createApp(
   // Mount API routes
   const api = Router();
   api.use(boardMutationGuard());
-  api.use(
-    "/health",
-    healthRoutes(db, {
-      deploymentMode: opts.deploymentMode,
-      deploymentExposure: opts.deploymentExposure,
-      authReady: opts.authReady,
-      companyDeletionEnabled: opts.companyDeletionEnabled,
-    }),
-  );
   api.use("/companies", companyRoutes(db, opts.storageService));
   api.use(companySkillRoutes(db));
   api.use(agentRoutes(db));
